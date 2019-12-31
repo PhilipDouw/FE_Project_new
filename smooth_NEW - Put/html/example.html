@@ -1,0 +1,280 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>Arbitrage-free Smoothing of the Implied Volatility Surface</title><meta name="generator" content="MATLAB 8.2"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2014-04-16"><meta name="DC.source" content="example.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, tt, code { font-size:12px; }
+pre { margin:0px 0px 20px; }
+pre.error { color:red; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h1>Arbitrage-free Smoothing of the Implied Volatility Surface</h1><!--introduction--><p>Implementation according to Fengler (2009) with example data taken from Appendix B.</p><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Load data</a></li><li><a href="#2">Prepare data</a></li><li><a href="#3">Estimation using strike-call_price nodes</a></li><li><a href="#4">close figures</a></li></ul></div><h2>Load data<a name="1"></a></h2><pre class="codeinput">clear
+load <span class="string">data_appendixB</span>
+ivs = ivs/100;
+r = r/100;
+<span class="comment">% * dax = scalar = close of DAX index on 13 June 2000</span>
+<span class="comment">% * ivs   = (KxT)  = implied volatility surface of call options (NaN if no</span>
+<span class="comment">% option is traded with corresponding strike-maturity combination</span>
+<span class="comment">% * maturity_days (1xT) = maturity (in days) of options for each column of</span>
+<span class="comment">% ivs</span>
+<span class="comment">% * q = scalar = dividend yield of index (is 0 since DAX is a performance</span>
+<span class="comment">% index)</span>
+<span class="comment">% * r = (1xT) = risk-free rate corresponding to maturities</span>
+<span class="comment">% * strike = (Kx1) = strikes of options for each row of ivs</span>
+</pre><h2>Prepare data<a name="2"></a></h2><p>All input data should be either a vector or a scalar. In the later case, the scalar is transformed into a corresponding vector with the same value in each element.</p><pre class="codeinput">T = length(maturity_days);
+K = length(strike);
+implied_volatility = reshape(ivs, [], 1);
+strike = repmat(strike, T,1);
+maturity = reshape(repmat(maturity_days',1,K)',[],1);
+pos_nan = isnan(implied_volatility);
+implied_volatility = implied_volatility(~pos_nan);
+strike   = strike(~pos_nan);
+maturity = maturity(~pos_nan);
+[~, pos] = ismember(maturity, maturity_days);
+interestrate = r(pos);
+maturity = maturity/365.25;
+clear <span class="string">K</span> <span class="string">T</span> <span class="string">ivs</span> <span class="string">maturity_days</span> <span class="string">pos_nan</span>
+</pre><h2>Estimation using strike-call_price nodes<a name="3"></a></h2><pre class="codeinput">call_price = blsprice(dax, strike, interestrate, maturity, implied_volatility, q);
+[u, tau, g, gamma] = ivs_smoothed(call_price, dax, strike, <span class="keyword">...</span>
+    maturity, interestrate, q, implied_volatility);
+[call_price_smoothed, implied_volatility_smoothed] = <span class="keyword">...</span>
+    evaluateSpline(u, tau, g, gamma, dax, strike, <span class="keyword">...</span>
+    interestrate, maturity, q);
+
+<span class="comment">% Plot Original and Arbitrage-Free Smoothed Prices</span>
+figure1 = figure;
+plot(strike, call_price, <span class="string">'ob'</span>);
+hold <span class="string">on</span>
+plot(strike, call_price_smoothed, <span class="string">'xr'</span>);
+title(<span class="string">'DAX Call Option Prices (13 June 2000)'</span>);
+xlabel(<span class="string">'Strike'</span>);
+ylabel(<span class="string">'Option Price'</span>);
+legend(<span class="string">'Original Prices'</span>, <span class="string">'Smoothed Prices'</span>);
+hold <span class="string">off</span>
+
+
+<span class="comment">% Plot results for smallest maturity (motivated by Figure 4 in the working</span>
+<span class="comment">% paper version Fengler (2005))</span>
+figure2 = figure;
+pos = maturity==tau(1);
+plot(strike(pos), call_price(pos), <span class="string">'ob'</span>);
+hold <span class="string">on</span>
+plot(strike(pos), call_price_smoothed(pos), <span class="string">'xr'</span>);
+title(<span class="string">'DAX Call Option Prices with 3 Days to Expiration (13 June 2000)'</span>);
+xlabel(<span class="string">'Strike'</span>);
+ylabel(<span class="string">'Option Price'</span>);
+legend(<span class="string">'Original Prices'</span>, <span class="string">'Smoothed Prices'</span>);
+hold <span class="string">off</span>
+
+
+<span class="comment">% Plot Lower Right Details for Strikes between 7500 and 10000</span>
+figure3 = figure;
+pos = maturity==tau(1) &amp; 7500 &lt;= strike &amp; strike &lt;= 10000;
+plot(strike(pos), call_price(pos), <span class="string">'ob'</span>);
+hold <span class="string">on</span>
+plot(strike(pos), call_price_smoothed(pos), <span class="string">'xr'</span>);
+title(<span class="string">'DAX Call Option Prices with 3 Days to Expiration (13 June 2000)'</span>);
+xlabel(<span class="string">'Strike'</span>);
+ylabel(<span class="string">'Option Price'</span>);
+legend(<span class="string">'Original Prices'</span>, <span class="string">'Smoothed Prices'</span>);
+hold <span class="string">off</span>
+
+
+<span class="comment">% Plot Implied Volatility Smile for Strikes between 7500 and 10000</span>
+figure4 = figure;
+pos = maturity==tau(1);
+plot(strike(pos), implied_volatility(pos), <span class="string">'ob'</span>);
+hold <span class="string">on</span>
+plot(strike(pos), implied_volatility_smoothed(pos), <span class="string">'xr'</span>);
+title(<span class="string">'DAX Call Option Prices with 3 Days to Expiration (13 June 2000)'</span>);
+xlabel(<span class="string">'Strike'</span>);
+ylabel(<span class="string">'Implied Volatility'</span>);
+legend(<span class="string">'Original Prices'</span>, <span class="string">'Smoothed Prices'</span>);
+hold <span class="string">off</span>
+
+
+<span class="comment">% Plot Smoothed Implied Volatility Surface</span>
+ivs = blsimpv(dax,u, repmat(r', size(u,1),1), repmat(tau', size(u,1),1), g, [], q);
+figure5 = figure;
+axes5 = axes(<span class="string">'Parent'</span>,figure5,<span class="string">'YDir'</span>,<span class="string">'reverse'</span>);
+view(axes5,[-59.5 34]);
+grid(axes5,<span class="string">'on'</span>);
+hold(axes5,<span class="string">'all'</span>);
+surfc(repmat(tau(2:end)', size(u,1),1), u(:,2:end), ivs(:,2:end),<span class="string">'Parent'</span>,axes5);
+</pre><img vspace="5" hspace="5" src="example_01.png" alt=""> <img vspace="5" hspace="5" src="example_02.png" alt=""> <img vspace="5" hspace="5" src="example_03.png" alt=""> <img vspace="5" hspace="5" src="example_04.png" alt=""> <img vspace="5" hspace="5" src="example_05.png" alt=""> <h2>close figures<a name="4"></a></h2><pre class="codeinput">close(figure1);
+close(figure2);
+close(figure3);
+close(figure4);
+close(figure5);
+</pre><p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2013b</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% Arbitrage-free Smoothing of the Implied Volatility Surface
+% Implementation according to Fengler (2009) with example data taken from 
+% Appendix B.
+%% Load data
+clear
+load data_appendixB
+ivs = ivs/100;
+r = r/100;
+% * dax = scalar = close of DAX index on 13 June 2000
+% * ivs   = (KxT)  = implied volatility surface of call options (NaN if no
+% option is traded with corresponding strike-maturity combination
+% * maturity_days (1xT) = maturity (in days) of options for each column of
+% ivs
+% * q = scalar = dividend yield of index (is 0 since DAX is a performance
+% index)
+% * r = (1xT) = risk-free rate corresponding to maturities
+% * strike = (Kx1) = strikes of options for each row of ivs
+
+%% Prepare data
+% All input data should be either a vector or a scalar. In the later case,
+% the scalar is transformed into a corresponding vector with the same value
+% in each element.
+T = length(maturity_days);
+K = length(strike);
+implied_volatility = reshape(ivs, [], 1);
+strike = repmat(strike, T,1);
+maturity = reshape(repmat(maturity_days',1,K)',[],1);
+pos_nan = isnan(implied_volatility);
+implied_volatility = implied_volatility(~pos_nan);
+strike   = strike(~pos_nan);
+maturity = maturity(~pos_nan);
+[~, pos] = ismember(maturity, maturity_days);
+interestrate = r(pos);
+maturity = maturity/365.25;
+clear K T ivs maturity_days pos_nan
+
+%% Estimation using strike-call_price nodes
+call_price = blsprice(dax, strike, interestrate, maturity, implied_volatility, q);
+[u, tau, g, gamma] = ivs_smoothed(call_price, dax, strike, ...
+    maturity, interestrate, q, implied_volatility);
+[call_price_smoothed, implied_volatility_smoothed] = ...
+    evaluateSpline(u, tau, g, gamma, dax, strike, ...
+    interestrate, maturity, q);
+
+% Plot Original and Arbitrage-Free Smoothed Prices
+figure1 = figure;
+plot(strike, call_price, 'ob');
+hold on
+plot(strike, call_price_smoothed, 'xr');
+title('DAX Call Option Prices (13 June 2000)');
+xlabel('Strike');
+ylabel('Option Price');
+legend('Original Prices', 'Smoothed Prices');
+hold off
+
+
+% Plot results for smallest maturity (motivated by Figure 4 in the working
+% paper version Fengler (2005))
+figure2 = figure;
+pos = maturity==tau(1);
+plot(strike(pos), call_price(pos), 'ob');
+hold on
+plot(strike(pos), call_price_smoothed(pos), 'xr');
+title('DAX Call Option Prices with 3 Days to Expiration (13 June 2000)');
+xlabel('Strike');
+ylabel('Option Price');
+legend('Original Prices', 'Smoothed Prices');
+hold off
+
+
+% Plot Lower Right Details for Strikes between 7500 and 10000
+figure3 = figure;
+pos = maturity==tau(1) & 7500 <= strike & strike <= 10000;
+plot(strike(pos), call_price(pos), 'ob');
+hold on
+plot(strike(pos), call_price_smoothed(pos), 'xr');
+title('DAX Call Option Prices with 3 Days to Expiration (13 June 2000)');
+xlabel('Strike');
+ylabel('Option Price');
+legend('Original Prices', 'Smoothed Prices');
+hold off
+
+
+% Plot Implied Volatility Smile for Strikes between 7500 and 10000
+figure4 = figure;
+pos = maturity==tau(1);
+plot(strike(pos), implied_volatility(pos), 'ob');
+hold on
+plot(strike(pos), implied_volatility_smoothed(pos), 'xr');
+title('DAX Call Option Prices with 3 Days to Expiration (13 June 2000)');
+xlabel('Strike');
+ylabel('Implied Volatility');
+legend('Original Prices', 'Smoothed Prices');
+hold off
+
+
+% Plot Smoothed Implied Volatility Surface
+ivs = blsimpv(dax,u, repmat(r', size(u,1),1), repmat(tau', size(u,1),1), g, [], q);
+figure5 = figure;
+axes5 = axes('Parent',figure5,'YDir','reverse');
+view(axes5,[-59.5 34]);
+grid(axes5,'on');
+hold(axes5,'all');
+surfc(repmat(tau(2:end)', size(u,1),1), u(:,2:end), ivs(:,2:end),'Parent',axes5);
+
+%% close figures
+close(figure1);
+close(figure2);
+close(figure3);
+close(figure4);
+close(figure5);
+##### SOURCE END #####
+--></body></html>
