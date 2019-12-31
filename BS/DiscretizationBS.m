@@ -1,4 +1,4 @@
-% Discretisation error:
+% Discretization error:
 
 function DiscrError = DiscretizationBS(S, K_min , K_max, interval, r, T, sigma)
 
@@ -11,9 +11,9 @@ function DiscrError = DiscretizationBS(S, K_min , K_max, interval, r, T, sigma)
         x = x + Matrix(k,7);
     end
 
-    % Discretisation error formula:
+    % Discretization error formula:
 
-    DiscrError = 2/T * exp(r * T) * ( sum(x) - ([(integral(@(K) putBS(S, K, r, T, sigma)/K^2,K_min,K_zero,'ArrayValued',true)) + ...
+    DiscrError = 2/T * exp(r * T) * (x - ([(integral(@(K) putBS(S, K, r, T, sigma)/K^2,K_min,K_zero,'ArrayValued',true)) + ...
                +(integral(@(K) callBS(S, K, r, T, sigma)/K^2,K_zero,K_max,'ArrayValued',true))]) );
 
 end

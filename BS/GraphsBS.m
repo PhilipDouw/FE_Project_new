@@ -4,20 +4,20 @@
 clear all
 clc
 
-%% Chaning the range between K_min and K_max:
+%% Changing the range between K_min and K_max:
 
-% Parameters
+% Parameters:
 
-S = 2000;
-interval = 1;
+S = 100;
+interval = 0.1;
 r = 0;
 T = 30/360;
 sigma = 0.2; % Can't be higher than 0.53
 
-K_min = 1990;
-KminGoal = 1500;
-K_max = 2010;
-KmaxGoal = 2500;
+K_min = 99;
+KminGoal = 80;
+K_max = 101;
+KmaxGoal = 120;
 
 % Calculations:
 
@@ -59,7 +59,7 @@ for i = 1:1:NumSteps
     K_max = K_max + interval;
 end
 
-% Creating the Graph:
+% Creating the Graphs:
 
 figure(1)
 
@@ -84,14 +84,14 @@ grid
 
 %% Changing sigma:
 
-S = 2000;
+S = 100;
 interval = 1;
 r = 0;
 T = 30/360;
-K_min = 1500;
-K_max = 2500;
-sigma = 0.05;
-MinSigma = 0.05;
+K_min = 80;
+K_max = 120;
+sigma = 0;
+MinSigma = 0;
 MaxSigma = 0.5; % Can't be higher than 0.53
 
 % Calculations:
@@ -130,10 +130,9 @@ for j = 1:1:SigmaSteps
     
     sigma = sigma + 0.001;
     
-    
 end
 
-% Creating the Graph:
+% Creating the Graphs:
 
 figure(2)
 
@@ -156,24 +155,23 @@ ylabel('Error')
 hold off
 grid
 
-%{
 %% Changing Delta K:
 
-S = 2000;
-interval = 1;
-Min_interval = 1;
-Max_interval = 10;
+S = 100;
+interval = 0.1;
+Min_interval = 0.1;
+Max_interval = 1;
 r = 0;
 T = 30/360;
-K_min = 1500;
-K_max = 2500;
+K_min = 80;
+K_max = 120;
 sigma = 0.2; % Can't be higher than 0.53
 
 % Calculations:
 
 % Setting number of loops:
 
-DeltaK_steps = 10 * Max_interval/Min_interval;
+DeltaK_steps = 100 * (Max_interval - Min_interval);
 
 % Calculating every error each time the wanted parameter changes:
 
@@ -203,8 +201,7 @@ for j = 1:1:DeltaK_steps
     DeltaKModification(j, 4) = ExpansionError;
     DeltaKModification(j, 5) = interval;
     
-    interval = interval + 0.025;
-    
+    interval = interval + 0.01;
     
 end
 
@@ -230,4 +227,3 @@ ylabel('Error')
 
 hold off
 grid
-%}

@@ -11,7 +11,7 @@
 function [Matrix, VIX, VIXerror] = VIX_computationBS(S , K_min, K_max, interval, r, T, sigma)
     
     [Matrix, F_zero, K_zero] = PutCallBS(S , K_min, K_max, interval, r, T, sigma);
-
+    
     % 7th column: the contribution of each OTM option:
     x = 0;
     for k = 1 : length(Matrix)
@@ -20,7 +20,7 @@ function [Matrix, VIX, VIXerror] = VIX_computationBS(S , K_min, K_max, interval,
     end
 
     % Whole VIX Index formula:
-    sigmaVIXsquared = 2 / T * sum(x) - 1 / T * (F_zero / K_zero - 1)^2;
+    sigmaVIXsquared = 2 / T * x - 1 / T * (F_zero / K_zero - 1).^2;
 
     % final VIX calculation:
     VIX = 100* sqrt(sigmaVIXsquared);
