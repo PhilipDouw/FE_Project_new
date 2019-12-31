@@ -14,10 +14,10 @@ r = 0;
 T = 1;
 sigma = 0.2; % Can't be higher than 0.53
 
-K_min = 1990;
-KminGoal = 1800;
-K_max = 2010;
-KmaxGoal = 2200;
+K_min = 99;
+KminGoal = 80;
+K_max = 101;
+KmaxGoal = 120;
 
 % Calculations:
 
@@ -158,14 +158,14 @@ grid
 
 %% Changing Delta K:
 
-S = 2000;
+S = 100;
 interval = 1;
 Min_interval = 1;
 Max_interval = 10;
 r = 0;
 T = 30/360;
-K_min = 1500;
-K_max = 2500;
+K_min = 80;
+K_max = 120;
 sigma = 0.2; % Can't be higher than 0.53
 
 % Calculations:
