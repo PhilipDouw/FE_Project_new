@@ -4,7 +4,7 @@
 clear all
 clc
 
-%% Chaning the range between K_min and K_max:
+%% Changing the range between K_min and K_max:
 
 % Parameters
 
@@ -14,10 +14,10 @@ r = 0;
 T = 1;
 sigma = 0.2; % Can't be higher than 0.53
 
-K_min = 95;
-KminGoal = 80;
-K_max = 105;
-KmaxGoal = 120;
+K_min = 1990;
+KminGoal = 1800;
+K_max = 2010;
+KmaxGoal = 2200;
 
 % Calculations:
 
@@ -54,12 +54,11 @@ for i = 1:1:NumSteps
     Kmin_KmaxModification(i, 5) = K_max - K_min;
     
     
-    
     K_min = K_min - interval;
     K_max = K_max + interval;
 end
 
-% Creating the Graph:
+% Creating the Graphs:
 
 figure(1)
 
@@ -156,7 +155,7 @@ ylabel('Error')
 hold off
 grid
 
-%{
+
 %% Changing Delta K:
 
 S = 2000;
@@ -230,4 +229,3 @@ ylabel('Error')
 
 hold off
 grid
-%]

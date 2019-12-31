@@ -16,7 +16,7 @@ function [Matrix, VIX, VIXerror] = VIX_computationBates(S , K_min, K_max, interv
     end
 
     % Whole VIX Index formula:
-    sigmaVIXsquared = 2 / Temp * sum(x) - 1 / Temp * (F_zero / K_zero - 1)^2;
+    sigmaVIXsquared = 2 / Temp * sum(x) - 1 / Temp * (F_zero / K_zero - 1).^2;
 
     % final VIX calculation:
     VIX = 100* sqrt(sigmaVIXsquared);
